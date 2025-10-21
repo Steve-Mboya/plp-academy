@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TutorFind - Volunteer Tutors</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  </head>
+  <body>
+
+    <div id="root"></div>
+    <script type="text/babel">
+      const { useState } = React;
+      function TutorFindApp() {
+        const [route, setRoute] = useState({ name: "home", params: {} });
+        const [user, setUser] = useState(null);
+        const tutors = [
+          { id: "t1", name: "James John", subjects: ["Mathematics", "Physics"], city: "Nairobi", bio: "PhD student in applied mathematics." },
+          { id: "t2", name: "Marcus Lind", subjects: ["English", "History"], city: "Nairobi", bio: "Volunteer tutor for high-school students." },
+          { id: "t3", name: "Peter Gordon", subjects: ["English", "History"], city: "Nairobi", bio: "Volunteer tutor for high-school students." }
+        ];
+        const [sessions, setSessions] = useState([
+          { id: "s1", title: "Calculus Practice", tutorId: "t1", date: "2025-11-05", time: "17:00", city: "Nairobi", seats: 6, description: "Integration by Parts." },
+          { id: "s2", title: "Mathematical Modelling", tutorId: "t2", date: "2025-11-08", time: "18:30", city: "Nairobi", seats: 8, description: "Weyl Algebra and Non-commutative Structures." },
+          { id: "s3", title: "Algebraic Structures", tutorId: "t3", date: "2025-11-08", time: "18:30", city: "Nairobi", seats: 8, description: "Quantum Algebras." }
+        ]);
+        const findTutor = (id) => tutors.find(t => t.id === id);
+        function handleLogin({ email }) { setUser({ id: email, name: email.split('@')[0] }); setRoute({ name: "home" }); }
+        function handleRegister({ name, email }) { setUser({ id: email, name }); setRoute({ name: "home" }); }
+        function handleLogout() { setUser(null); setRoute({ name: "home" }); }
+        function signUp(sessionId) {
+          setSessions(prev => prev.map(s => s.id === sessionId ? { ...s, seats: s.seats - 1 } : s));
+          setRoute({ name: "confirmed", params: { id: sessionId } });
+        }
+        const Header = () => (
+          <header className="header">
+            <div className="header-inner">
+              <div className="brand" onClick={() => setRoute({ name: "home" })}>Mathematics Tutor</div>
+              <nav className="nav-links">
+                <button className="link" onClick={() => setRoute({ name: "home" })}>Sessions</button>
+                <button className="link" onClick={() => setRoute({ name: "tutors" })}>Tutors</button>
+              </nav>
+              <div className="actions">
+                {user ? (
+                  <>
+                    <button className="btn ghost" onClick={() => setRoute({ name: "profile", params: { id: user.id } })}>{user.name}</button>
+                    <button className="btn" onClick={handleLogout}>Logout</button>
+                  </>
+                ) : (
+                  <>
+                    <button className="btn ghost" onClick={() => setRoute({ name: "login" })}>Login</button>
+                    <button className="btn" onClick={() => setRoute({ name: "register" })}>Register</button>
+                  </>
+                )}
+              </div>
+            </div>
+          </header>
+        );
+        const Home = () => (
+          <main className="container">
+            <h1 className="page-title">Upcoming Volunteer Tutoring Sessions In Mathematics and Computations</h1>
+            <p className="subtitle">Find Skilled, local and International tutors offering their time to help you learn Advanced Mathematics.</p>
+            <div className="grid">
+              {sessions.map(s => {
+                const tutor = findTutor(s.tutorId);
+                return (
+                  <div key={s.id} className="card">
+                    <h3>{s.title}</h3>
+                    <p className="meta">{s.date} · {s.time} · {s.city}</p>
+                    <p className="desc">{s.description}</p>
+                    <p className="small">Tutor: {tutor.name}</p>
+                    <div className="card-footer">
+                      <button className="btn ghost" onClick={() => setRoute({ name: "session", params: { id: s.id } })}>View</button>
+                      <button className="btn" disabled={s.seats <= 0} onClick={() => signUp(s.id)}>Sign Up</button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </main>
+        );
+        const Login = () => {
+          const [email, setEmail] = useState("");
+          const [password, setPassword] = useState("");
+          return (
+            <main className="form-container">
+              <h2>Login</h2>
+              <label>Email</label>
+              <input value={email} onChange={(e)=>setEmail(e.target.value)} />
+              <label>Password</label>
+              <input type="password" value={password} onChange={(e)=>setPassword(e.target.value)} />
+              <div className="form-actions">
+                <button className="btn" onClick={()=>handleLogin({email,password})}>Login</button>
+                <button className="btn ghost" onClick={()=>setRoute({ name: "register" })}>Create Account</button>
+              </div>
+            </main>
+          );
+        };
+        const Register = () => {
+          const [name, setName] = useState("");
+          const [email, setEmail] = useState("");
+          const [password, setPassword] = useState("");
+          return (
+            <main className="form-container">
+              <h2>Register</h2>
+              <label>Name</label>
+              <input value={name} onChange={(e)=>setName(e.target.value)} />
+              <label>Email</label>
+              <input value={email} onChange={(e)=>setEmail(e.target.value)} />
+              <label>Password</label>
+              <input type="password" value={password} onChange={(e)=>setPassword(e.target.value)} />
+              <div className="form-actions">
+                <button className="btn" onClick={()=>handleRegister({name,email,password})}>Create Account</button>
+              </div>
+            </main>
+          );
+        };
+        const Confirmed = () => (
+          <main className="form-container text-center">
+            <h2>You're signed up!</h2>
+            <p>Thank you for joining. We'll send you a confirmation soon.</p>
+            <button className="btn" onClick={()=>setRoute({ name: "home" })}>Back to Home</button>
+          </main>
+        );
+        const Router = () => {
+          if (route.name === "home") return <Home />;
+          if (route.name === "login") return <Login />;
+          if (route.name === "register") return <Register />;
+          if (route.name === "confirmed") return <Confirmed />;
+          return <Home />;
+        };
+        return (
+          <div className="app">
+            <Header />
+            <Router />
+            <footer className="footer">© {new Date().getFullYear()} TutorFind</footer>
+          </div>
+        );
+      }
+      ReactDOM.createRoot(document.getElementById("root")).render(<TutorFindApp />);
+    </script>
+  </body>
+</html>
